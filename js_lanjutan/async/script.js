@@ -65,43 +65,59 @@
 
 const searchButton = document.querySelector('.search-btn');
 searchButton.addEventListener('click', async function() {
+    try {
     const inputKeyword = document.querySelector('.input-keyword').value;
     const movies = await getMovies(inputKeyword);
     updateUI(movies);
-});
-
-// event binding untuk tombol detail
-document.addEventListener('click', async function(e) {
-    if( e.target.classlist.contains('modal-detail-button') ) {
-        const imdbID = e.target.dataset.imdbid;
-        const movieDetail = await getMovieDetail(imdbID);
-        updateUIDetail(movieDetail);
+    } catch (error) {
+    console.error('Error fetching movies:', error);
+    alert('Failed to fetch movies. Please try again later.');
     }
 });
 
-function getMovieDetail(imdbID) {
-    return fetch(`http://www.omdbapi.com/?apikey=474a383a&i=${imdbID}`)
-        .then(response => response.json())
-        .then(m => m);
-}
-
-function updateUIDetail(m) {
-    const movieDetail = showMovieDetail(m);
-    const modalBody = document.querySelector('.modal-body');
-    modalBody.innerHTML = movieDetail;
-}
 
 function getMovies(keyword) {
-    return fetch(`http://www.omdbapi.com/?apikey=474a383a&s=${keyword}`)
-        .then(response => response.json())
-        .then(response => response.Search);
-}
+    return fetch('http://www.omdbapi.com/?apikey=474a383a&s=' + keyword)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(responses.statusText);
+            }
+            return response.json();
+        })
+        .then(response => {
+            if (response.Response === "False") {
+                throw new Error(response.Error);
+            }
+            return response.Search;
+        })
+    };
  
 function updateUI(movies) {
     let cards = '';
     movies.forEach(m => cards += showCards(m));
     const movieContainer = document.querySelector('.movie-container');
     movieContainer.innerHTML = cards;
+}
+
+
+// event binding untuk tombol detail
+document.addEventListener('click', async function (e) {
+    if (e.target.classList.contains('modal-detail-button')) {
+        const imdbID = e.target.dataset.imdbID;
+        const movieDetail = await getMovieDetail(imdbID);
+        updateUIDetail(movieDetail);
+    }
+});
+
+function getMovieDetail(imdbID) {
+    return fetch('http://www.omdbapi.com/?apikey=474a383a&i=' + imdbID)
+        .then(response => response.json())
+        .then(m => m);
+}
+
+function updateUIDetail(m) {
+    const modalBody = document.querySelector('.modal-body');
+    modalBody.innerHTML = showMovieDetail(m);
 }
 
 
